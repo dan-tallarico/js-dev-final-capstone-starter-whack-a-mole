@@ -253,6 +253,7 @@ function updateScore() {
   // Increment the points global variable by 1 point
   // Update score.textContent with points.
   // Return points;
+  points = points + 1;
 }
 
 ```

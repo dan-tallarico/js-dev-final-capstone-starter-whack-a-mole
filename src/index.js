@@ -1,15 +1,19 @@
 const holes = document.querySelectorAll('.hole');
 const moles = document.querySelectorAll('.mole');
+const huggys = document.querySelectorAll('.huggy');
 const startButton = document.querySelector('#start');
 // TODO: Add the missing query selectors:
-const score; // Use querySelector() to get the score element
-const timerDisplay; // use querySelector() to get the timer element.
+const score = document.querySelector('#score'); // Use querySelector() to get the score element
+const timerDisplay = document.querySelector('#timer');; // use querySelector() to get the timer element.
+let difficultySelector = document.getElementById('difficulty'); //This gets the value from the difficulty drop down and assisn it to a variable.
+let difficuly = difficultySelector.value; //This is the difficulty variable that's used for the delay tool.
 
 let time = 0;
 let timer;
 let lastHole = 0;
 let points = 0;
-let difficulty = "hard";
+let huggyPoints = 0; //This tracks the total amount of huggy points. Ideally, when someone gets to -10 huggy points something spooky would happen...but I ran out of time!
+
 
 /**
  * Generates a random integer within a range.
@@ -21,7 +25,7 @@ let difficulty = "hard";
  *
  */
 function randomInteger(min, max) {
-  // return Math.floor(Math.random() * (max - min + 1)) + min;
+   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**
@@ -41,6 +45,13 @@ function randomInteger(min, max) {
  */
 function setDelay(difficulty) {
   // TODO: Write your code here.
+  if(difficulty == "easy"){
+    return 1500;
+  }
+  else if (difficulty == "normal"){
+    return 1000;
+  }
+  else return 856;
   
 }
 
@@ -60,6 +71,17 @@ function setDelay(difficulty) {
  */
 function chooseHole(holes) {
   // TODO: Write your code here.
+  
+  let holeIndex = randomInteger(0,8);
+  const hole = holes[holeIndex];
+
+  if(lastHole == hole){
+    return chooseHole(holes);
+  }
+
+  lastHole = hole;
+
+  return hole;
 
 }
 
@@ -85,7 +107,13 @@ function chooseHole(holes) {
 */
 function gameOver() {
   // TODO: Write your code here
-  
+  if(time > 0){
+    let timeoutId = showUp();
+    return timeoutId;
+  } else {
+    let gameStopped = stopGame();
+    return gameStopped;
+  }
 }
 
 /**
@@ -98,9 +126,10 @@ function gameOver() {
 *
 */
 function showUp() {
-  let delay = 0; // TODO: Update so that it uses setDelay()
-  const hole = 0;  // TODO: Update so that it use chooseHole()
+  let delay = setDelay(difficulty); // TODO: Update so that it uses setDelay()
+  const hole = chooseHole(holes);  // TODO: Update so that it use chooseHole()
   return showAndHide(hole, delay);
+  
 }
 
 /**
@@ -112,15 +141,19 @@ function showUp() {
 *
 */
 function showAndHide(hole, delay){
-  // TODO: call the toggleVisibility function so that it adds the 'show' class.
   
-  const timeoutID = setTimeout(() => {
-    // TODO: call the toggleVisibility function so that it removes the 'show' class when the timer times out.
+    // TODO: Call the toggleVisibility() function so that it adds the show class.
+    toggleVisibility(hole);
     
-    gameOver();
-  }, 0); // TODO: change the setTimeout delay to the one provided as a parameter
-  return timeoutID;
-}
+    const timeoutID = setTimeout(() => {
+      // TODO: Call the toggleVisibility() function so that it removes the show class when the timer times out.
+      toggleVisibility(hole);
+      
+      gameOver();
+    }, delay); // TODO: Change the setTimeout() delay to the one provided as a parameter
+    return timeoutID;
+  }
+
 
 /**
 *
@@ -130,7 +163,7 @@ function showAndHide(hole, delay){
 */
 function toggleVisibility(hole){
   // TODO: add hole.classList.toggle so that it adds or removes the 'show' class.
-  
+  hole.classList.toggle("show");
   return hole;
 }
 
@@ -146,6 +179,8 @@ function toggleVisibility(hole){
 */
 function updateScore() {
   // TODO: Write your code here
+  points = points + 1;
+  score.textContent = points;
 
   return points;
 }
@@ -161,6 +196,9 @@ function clearScore() {
   // TODO: Write your code here
   // points = 0;
   // score.textContent = points;
+points = 0;
+score.textContent = points;
+
   return points;
 }
 
@@ -172,8 +210,14 @@ function clearScore() {
 function updateTimer() {
   // TODO: Write your code here.
   // hint: this code is provided to you in the instructions.
+  {
+    if (time > 0){
+      time -= 1;
+      timerDisplay.textContent = time;
+    }
+    return time;
+  }
   
-  return time;
 }
 
 /**
@@ -185,6 +229,7 @@ function updateTimer() {
 function startTimer() {
   // TODO: Write your code here
   // timer = setInterval(updateTimer, 1000);
+  timer = setInterval(updateTimer, 1000);
   return timer;
 }
 
@@ -197,8 +242,23 @@ function startTimer() {
 *
 */
 function whack(event) {
-  // TODO: Write your code here.
-  // call updateScore()
+ 
+  updateScore();
+  return points;
+}
+
+function badWhack(event) {
+ 
+  updateScoreBad(); //This calls the function that reduces the points.
+  huggyPoints++; //This updates the huggypoints.This is a universial counter that would not get reset between rounds and could be used for some fun tricks.
+  return points;
+}
+
+function updateScoreBad() {
+  // Subtracks a point from the total score when a huggy is clicked. 
+  points = points - 1;
+  score.textContent = points;
+
   return points;
 }
 
@@ -209,8 +269,30 @@ function whack(event) {
 */
 function setEventListeners(){
   // TODO: Write your code here
-
+  moles.forEach(
+    mole => mole.addEventListener('click', whack)
+  );
   return moles;
+}
+/**
+*
+* Because the Huggy is a difference class these create an event listener for those. Also, when someone does click on it it assigns it the badwhack function.
+*/
+
+function setEventListenersHuggy(){
+  // TODO: Write your code here
+  huggys.forEach(
+    huggy => huggy.addEventListener('click', badWhack)
+  );
+  return huggys;
+}
+
+function setDifficultyListener(){
+  // This is an event listener for the dropdown. Whenever the dropdown changes it changes the difficulty setting.
+  difficultySelector.addEventListener('change', function() {
+    difficulty = difficultySelector.value;
+    console.log(difficulty); // Output: The updated selected difficulty value
+  });
 }
 
 /**
@@ -243,8 +325,13 @@ function stopGame(){
 *
 */
 function startGame(){
-  //setDuration(10);
-  //showUp();
+  setDuration(10);
+  showUp();
+  startTimer();
+  setEventListeners();
+  clearScore();
+  setEventListenersHuggy();
+  setDifficultyListener();
   return "game started";
 }
 
